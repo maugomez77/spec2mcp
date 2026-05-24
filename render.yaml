@@ -1,11 +1,9 @@
 services:
   - type: web
     name: spec2mcp-demo
-    runtime: python
+    runtime: docker
     repo: https://github.com/maugomez77/spec2mcp
     plan: free
-    buildCommand: |
-      pip install uv
-      uv pip install --system -r requirements.txt
-      uv pip install --system -e .
-    startCommand: uvicorn spec2mcp.api.server:app --host 0.0.0.0 --port $PORT
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeploy: yes

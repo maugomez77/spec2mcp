@@ -2,11 +2,9 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-COPY pyproject.toml .
-RUN pip install uv && uv pip install --system -e .
+COPY . .
 
-COPY src/ src/
-COPY templates/ templates/
+RUN pip install --no-cache-dir -r requirements.txt && pip install --no-cache-dir -e .
 
 EXPOSE 8080
 
