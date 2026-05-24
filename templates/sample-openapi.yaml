@@ -1,77 +1,68 @@
 openapi: 3.0.3
 info:
-  title: Invoicing API
+  title: Fake Store API
   version: 1.0.0
-  description: Simple invoicing API for small businesses
+  description: Free fake REST API for testing — products, carts, users
 
 servers:
-  - url: https://api.example.com/v1
+  - url: https://fakestoreapi.com
 
 paths:
-  /invoices:
+  /products:
     get:
-      summary: List invoices
-      operationId: listInvoices
+      summary: List all products
+      operationId: listProducts
       parameters:
-        - name: status
-          in: query
-          schema:
-            type: string
-          description: Filter by status (paid, pending, overdue)
-        - name: page
+        - name: limit
           in: query
           schema:
             type: integer
-            default: 1
+            default: 20
+          description: Number of products to return
       responses:
         '200':
-          description: List of invoices
+          description: List of products
 
-    post:
-      summary: Create an invoice
-      operationId: createInvoice
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                customer_id:
-                  type: string
-                amount:
-                  type: number
-                due_date:
-                  type: string
-                  format: date
-      responses:
-        '201':
-          description: Invoice created
-
-  /invoices/{id}:
+  /products/{id}:
     get:
-      summary: Get invoice by ID
-      operationId: getInvoice
+      summary: Get a single product
+      operationId: getProduct
       parameters:
         - name: id
           in: path
           required: true
           schema:
-            type: string
+            type: integer
       responses:
         '200':
-          description: Invoice details
+          description: Product details
 
-  /customers:
+  /carts:
     get:
-      summary: List customers
-      operationId: listCustomers
+      summary: List all carts
+      operationId: listCarts
       responses:
         '200':
-          description: List of customers
-    post:
-      summary: Create a customer
-      operationId: createCustomer
+          description: List of carts
+
+  /carts/{id}:
+    get:
+      summary: Get a single cart
+      operationId: getCart
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        '201':
-          description: Customer created
+        '200':
+          description: Cart details
+
+  /users:
+    get:
+      summary: List all users
+      operationId: listUsers
+      responses:
+        '200':
+          description: List of users

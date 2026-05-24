@@ -5,7 +5,7 @@ from spec2mcp.models.artifact import Artifact, ArtifactType
 from spec2mcp.ingestors import get_ingestor
 
 
-def seed_demo():
+async def seed_demo():
     ensure_dirs()
     existing = store.get_project("Demo Store API")
     if existing:
@@ -32,8 +32,7 @@ def seed_demo():
     ingestor_cls = get_ingestor("openapi")
     ingestor = ingestor_cls()
 
-    import asyncio
-    result, endpoints = asyncio.run(ingestor.ingest(artifact))
+    result, endpoints = await ingestor.ingest(artifact)
     store.update_artifact(result)
     store.save_endpoints(endpoints)
     project.artifact_count = len(store.list_artifacts(project.id))

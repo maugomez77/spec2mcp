@@ -33,7 +33,7 @@ async def health():
 
 @app.on_event("startup")
 async def startup():
-    seed_demo()
+    await seed_demo()
     projects = store.list_projects()
     if projects:
         set_active_project(projects[0].id)
