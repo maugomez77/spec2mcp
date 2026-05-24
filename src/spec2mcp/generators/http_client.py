@@ -1,3 +1,4 @@
+import re
 import httpx
 from spec2mcp.models.endpoint import Endpoint, HttpMethod
 from spec2mcp.models.project import Project
@@ -22,15 +23,28 @@ class GeneratedClient:
 
     async def call_endpoint(self, ep: Endpoint, **kwargs) -> dict:
         url = f"{self.base_url.rstrip('/')}{ep.path}"
+
+        path_params = {}
+        query_params = {}
+        for p in ep.parameters:
+            value = kwargs.get(p.name)
+            if value is not None:
+                if p.location == "path":
+                    path_params[p.name] = value
+                else:
+                    query_params[p.name] = value
+
+        if path_params:
+            url = re.sub(r"\{(\w+)\}", lambda m: str(path_params.get(m.group(1), m.group(0))), url)
+
         headers = self._build_headers()
-        params = {k: v for k, v in kwargs.items() if v is not None}
         is_get_like = ep.method in _GET_LIKE
         response = await self._client.request(
             method=ep.method.value,
             url=url,
             headers=headers,
-            params=params if is_get_like else None,
-            json=params if not is_get_like else None,
+            params=query_params if is_get_like else None,
+            json=query_params if not is_get_like else None,
         )
         response.raise_for_status()
         return response.json()
