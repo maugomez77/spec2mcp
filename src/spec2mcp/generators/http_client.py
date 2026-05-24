@@ -1,6 +1,9 @@
 import httpx
-from spec2mcp.models.endpoint import Endpoint
+from spec2mcp.models.endpoint import Endpoint, HttpMethod
 from spec2mcp.models.project import Project
+
+
+_GET_LIKE = {HttpMethod.get, HttpMethod.delete, HttpMethod.head, HttpMethod.options}
 
 
 class GeneratedClient:
@@ -21,12 +24,13 @@ class GeneratedClient:
         url = f"{self.base_url.rstrip('/')}{ep.path}"
         headers = self._build_headers()
         params = {k: v for k, v in kwargs.items() if v is not None}
+        is_get_like = ep.method in _GET_LIKE
         response = await self._client.request(
             method=ep.method.value,
             url=url,
             headers=headers,
-            params=params if ep.method in (httpx.GET, httpx.DELETE, httpx.HEAD, httpx.OPTIONS) else None,
-            json=params if ep.method not in (httpx.GET, httpx.DELETE, httpx.HEAD, httpx.OPTIONS) else None,
+            params=params if is_get_like else None,
+            json=params if not is_get_like else None,
         )
         response.raise_for_status()
         return response.json()

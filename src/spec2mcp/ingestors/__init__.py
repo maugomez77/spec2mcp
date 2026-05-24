@@ -3,7 +3,7 @@ from spec2mcp.ingestors.postman import PostmanIngestor
 from spec2mcp.ingestors.graphql import GraphQLIngestor
 from spec2mcp.ingestors.db_schema import DBSchemaIngestor
 
-INGESTORS = {
+INGESTORS: dict[str, type] = {
     "openapi": OpenAPIIngestor,
     "postman": PostmanIngestor,
     "graphql": GraphQLIngestor,
@@ -16,3 +16,10 @@ def detect_type(path: str, content: str | None = None) -> str | None:
         if cls.can_handle(path, content):
             return name
     return None
+
+
+def get_ingestor(name: str):
+    cls = INGESTORS.get(name)
+    if cls is None:
+        raise ValueError(f"Unknown ingestor: {name}")
+    return cls
