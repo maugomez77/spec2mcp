@@ -1,0 +1,77 @@
+openapi: 3.0.3
+info:
+  title: Invoicing API
+  version: 1.0.0
+  description: Simple invoicing API for small businesses
+
+servers:
+  - url: https://api.example.com/v1
+
+paths:
+  /invoices:
+    get:
+      summary: List invoices
+      operationId: listInvoices
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+          description: Filter by status (paid, pending, overdue)
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: List of invoices
+
+    post:
+      summary: Create an invoice
+      operationId: createInvoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: string
+                amount:
+                  type: number
+                due_date:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: Invoice created
+
+  /invoices/{id}:
+    get:
+      summary: Get invoice by ID
+      operationId: getInvoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invoice details
+
+  /customers:
+    get:
+      summary: List customers
+      operationId: listCustomers
+      responses:
+        '200':
+          description: List of customers
+    post:
+      summary: Create a customer
+      operationId: createCustomer
+      responses:
+        '201':
+          description: Customer created
