@@ -1,22 +1,11 @@
 services:
   - type: web
-    name: spec2mcp-api
+    name: spec2mcp-demo
     runtime: python
-    repo: https://github.com/mauriciogomez77/spec2mcp
+    repo: https://github.com/maugomez77/spec2mcp
     plan: free
-    buildCommand: pip install uv && uv pip install --system -e .
+    buildCommand: |
+      pip install uv
+      uv pip install --system -r requirements.txt
+      uv pip install --system -e .
     startCommand: uvicorn spec2mcp.api.server:app --host 0.0.0.0 --port $PORT
-    envVars:
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
-          name: spec2mcp-db
-          property: hostport
-
-  - type: pserv
-    name: spec2mcp-db
-    plan: free
-    type: pserv
-    runtime: image
-    image:
-      url: postgres:16-alpine
