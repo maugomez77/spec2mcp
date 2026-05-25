@@ -9,11 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "clsx": "^2.1",
+    "lucide-react": "^0.460",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^6.28",
-    "lucide-react": "^0.460",
-    "clsx": "^2.1"
+    "react-router-dom": "^6.28"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
