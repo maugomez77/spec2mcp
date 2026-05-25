@@ -8,8 +8,6 @@ import {
   ExternalLink,
   ArrowRight,
   Globe,
-  Box,
-  Wrench,
 } from 'lucide-react'
 
 export default function Projects() {
