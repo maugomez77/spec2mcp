@@ -73,7 +73,7 @@ export default function ProjectDetail() {
 {`{
   "mcpServers": {
     "spec2mcp": {
-      "url": "http://localhost:8080/mcp/"
+      "url": "https://spec2mcp-demo.onrender.com/mcp/"
     }
   }
 }`}

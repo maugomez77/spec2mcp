@@ -50,7 +50,7 @@ export default function Dashboard() {
             </span>
           </div>
           <p className="text-xs text-gray-400 mt-3">
-            MCP endpoint: <code className="bg-gray-100 px-1.5 py-0.5 rounded">http://localhost:8080/mcp/</code>
+            MCP endpoint: <code className="bg-gray-100 px-1.5 py-0.5 rounded">https://spec2mcp-demo.onrender.com/mcp/</code>
           </p>
         </div>
       </div>
