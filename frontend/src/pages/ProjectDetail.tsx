@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { fetchProjects, fetchArtifacts, fetchEndpointsByProject, fetchArtifact } from '../lib/api'
+import { fetchProjects, fetchArtifacts, fetchEndpointsByProject, fetchArtifact, uploadArtifact } from '../lib/api'
 import {
   ArrowLeft,
   Globe,
@@ -13,6 +13,9 @@ import {
   ExternalLink,
   X,
   Eye,
+  Upload,
+  FileUp,
+  Plus,
 } from 'lucide-react'
 
 export default function ProjectDetail() {
@@ -24,6 +27,10 @@ export default function ProjectDetail() {
   const [expandedTool, setExpandedTool] = useState<string | null>(null)
   const [viewedArtifact, setViewedArtifact] = useState<any>(null)
   const [artifactContent, setArtifactContent] = useState<string | null>(null)
+  const [showImport, setShowImport] = useState(false)
+  const [importContent, setImportContent] = useState('')
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importing, setImporting] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -38,6 +45,35 @@ export default function ProjectDetail() {
     }, null, 2))
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const reloadArtifacts = () => {
+    if (!id) return
+    fetchProjects().then(ps => setProject(ps.find((p: any) => p.id === id)))
+    fetchArtifacts(id).then(setArtifacts).catch(() => setArtifacts([]))
+    fetchEndpointsByProject(id).then(setTools).catch(() => setTools([]))
+  }
+
+  const handleImport = async () => {
+    if (!id || (!importContent && !importFile)) return
+    setImporting(true)
+    try {
+      let content = importContent
+      let filename = 'imported-spec.yaml'
+      if (importFile) {
+        content = await importFile.text()
+        filename = importFile.name
+      }
+      await uploadArtifact(id, filename, content)
+      setImportContent('')
+      setImportFile(null)
+      setShowImport(false)
+      reloadArtifacts()
+    } catch (e: any) {
+      alert('Import failed: ' + (e.message || e))
+    } finally {
+      setImporting(false)
+    }
   }
 
   const viewArtifact = async (artifact: any) => {
@@ -65,10 +101,107 @@ export default function ProjectDetail() {
 
   return (
     <div className="p-6 lg:p-10 max-w-6xl mx-auto">
-      <Link to="/projects" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 mb-6 transition-colors font-medium">
+      <Link to="/projects" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 mb-4 transition-colors font-medium">
         <ArrowLeft size={15} />
         Back to projects
       </Link>
+
+      {/* Import section */}
+      <div className="mb-6">
+        {!showImport ? (
+          <button
+            onClick={() => setShowImport(true)}
+            className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-all shadow-sm"
+          >
+            <Upload size={16} />
+            Import Spec
+          </button>
+        ) : (
+          <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-indigo-100">
+                  <Upload size={16} className="text-indigo-600" />
+                </div>
+                <h3 className="font-semibold text-slate-800 text-sm">Import Artifact</h3>
+              </div>
+              <button onClick={() => setShowImport(false)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  Upload file
+                </label>
+                <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-slate-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/30 transition-colors cursor-pointer">
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".yaml,.yml,.json,.java,.proto,.wsdl,.sql,.prisma,.graphql,.gql"
+                    onChange={e => {
+                      const f = e.target.files?.[0]
+                      if (f) {
+                        setImportFile(f)
+                        f.text().then(setImportContent)
+                      }
+                    }}
+                  />
+                  {importFile ? (
+                    <div className="text-center">
+                      <FileCode2 size={20} className="mx-auto text-indigo-500 mb-1" />
+                      <p className="text-sm font-medium text-indigo-600">{importFile.name}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{(importFile.size / 1024).toFixed(1)} KB</p>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <FileUp size={22} className="mx-auto text-slate-300 mb-2" />
+                      <p className="text-xs font-medium text-slate-500">Drop file or click to browse</p>
+                      <p className="text-[10px] text-slate-400 mt-1">.yaml .json .java .proto .wsdl .sql .prisma</p>
+                    </div>
+                  )}
+                </label>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  Or paste content
+                </label>
+                <textarea
+                  value={importContent}
+                  onChange={e => setImportContent(e.target.value)}
+                  placeholder="Paste your OpenAPI YAML, Spring controller code, GraphQL schema, or any supported format..."
+                  className="w-full h-32 border border-slate-200 rounded-xl px-4 py-3 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none bg-slate-50 focus:bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-xs text-slate-400">
+                Auto-detects: OpenAPI · Spring MVC · GraphQL · gRPC · WSDL · DB Schema · Postman
+              </p>
+              <button
+                onClick={handleImport}
+                disabled={!importContent.trim() || importing}
+                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                  importContent.trim() && !importing
+                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm'
+                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                }`}
+              >
+                {importing ? (
+                  <>Importing...</>
+                ) : (
+                  <>
+                    <Plus size={16} />
+                    Import & Parse
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 lg:p-8 mb-8">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 mb-8">

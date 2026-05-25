@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from spec2mcp.db import store
 from spec2mcp.models.artifact import Artifact, ArtifactType
 from spec2mcp.models.project import Project
+from spec2mcp.ingestors import detect_type, get_ingestor
 
 router = APIRouter(prefix="/api", tags=["api"])
 
@@ -15,9 +16,47 @@ class CreateProjectRequest(BaseModel):
 class AddArtifactRequest(BaseModel):
     project_id: str
     name: str
-    type: str
+    type: str | None = None
     source_path: str | None = None
-    raw_content: str | None = None
+    raw_content: str
+
+
+@router.post("/artifacts")
+async def add_artifact(req: AddArtifactRequest):
+    project = store.get_project_by_id(req.project_id)
+    if not project:
+        raise HTTPException(404, "Project not found")
+
+    detected = req.type or detect_type(req.name, req.raw_content) or "openapi"
+    try:
+        valid_type = ArtifactType(detected)
+    except ValueError:
+        valid_type = ArtifactType.openapi
+
+    artifact = Artifact(
+        project_id=req.project_id,
+        name=req.name,
+        type=valid_type,
+        source_path=req.source_path,
+        raw_content=req.raw_content,
+    )
+    store.create_artifact(artifact)
+
+    try:
+        ingestor_cls = get_ingestor(detected)
+        ingestor = ingestor_cls()
+        result, endpoints = await ingestor.ingest(artifact)
+        store.update_artifact(result)
+        store.save_endpoints(endpoints)
+        project.artifact_count = len(store.list_artifacts(project.id))
+        project.tool_count = len(store.get_endpoints_by_project(project.id))
+        store.update_project(project)
+        return result
+    except Exception as e:
+        artifact.status = "error"
+        artifact.error_message = str(e)
+        store.update_artifact(artifact)
+        raise HTTPException(500, f"Ingestion failed: {e}")
 
 
 @router.get("/projects")
