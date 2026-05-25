@@ -42,11 +42,15 @@ export default function ProjectDetail() {
 
   const viewArtifact = async (artifact: any) => {
     setViewedArtifact(artifact)
-    try {
-      const full = await fetchArtifact(artifact.id)
-      setArtifactContent(full.raw_content || '')
-    } catch {
-      setArtifactContent('Could not load artifact content.')
+    if (artifact.raw_content) {
+      setArtifactContent(artifact.raw_content)
+    } else {
+      try {
+        const full = await fetchArtifact(artifact.id)
+        setArtifactContent(full.raw_content || '')
+      } catch {
+        setArtifactContent('Could not load artifact content.')
+      }
     }
   }
 
