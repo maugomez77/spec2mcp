@@ -19,11 +19,11 @@ const navItems = [
 export default function App() {
   const loc = useLocation()
   return (
-    <div className="min-h-screen flex">
-      <aside className="w-60 bg-sidebar flex-shrink-0 flex flex-col">
+    <div className="min-h-screen flex bg-slate-50">
+      <aside className="w-60 bg-slate-900 flex-shrink-0 flex flex-col min-h-screen sticky top-0">
         <div className="px-5 pt-6 pb-8">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white font-bold text-sm">s</div>
+            <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-indigo-500/25">s</div>
             <span className="text-white font-semibold text-base tracking-tight">spec2mcp</span>
           </Link>
         </div>
@@ -35,10 +35,10 @@ export default function App() {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-sidebar-active text-white'
-                    : 'text-slate-400 hover:text-white hover:bg-sidebar-hover'
+                    ? 'bg-slate-700 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
                 }`}
               >
                 <Icon size={18} />
@@ -54,7 +54,7 @@ export default function App() {
           </div>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto scrollbar-thin">
+      <main className="flex-1 overflow-auto">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/projects" element={<Projects />} />
