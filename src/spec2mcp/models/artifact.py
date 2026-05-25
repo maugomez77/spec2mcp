@@ -9,6 +9,9 @@ class ArtifactType(str, Enum):
     graphql = "graphql"
     db_schema = "db_schema"
     docs = "docs"
+    spring_mvc = "spring_mvc"
+    wsdl = "wsdl"
+    grpc = "grpc"
 
 
 class ArtifactStatus(str, Enum):

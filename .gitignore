@@ -7,3 +7,4 @@ frontend/dist/
 *.egg-info/
 dist/
 .DS_Store
+.vercel

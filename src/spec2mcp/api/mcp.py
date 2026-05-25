@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from spec2mcp.db import store
 from spec2mcp.generators.mcp_v1 import generate_tool_definitions
+from spec2mcp.generators.prompts import generate_prompts, generate_resources as _gen_resources
 
 router = APIRouter(prefix="/mcp", tags=["mcp"])
 _active_project_id: str | None = None
@@ -43,22 +44,41 @@ async def mcp_endpoint(req: MCPRequest):
     if req.method == "resources/list":
         if not _active_project_id:
             return {"jsonrpc": "2.0", "result": {"resources": []}, "id": req.id}
-        artifacts = store.list_artifacts(_active_project_id)
+        proj = store.get_project_by_id(_active_project_id)
+        endpoints = store.get_endpoints_by_project(_active_project_id)
+        resources = _gen_resources(endpoints, proj) if proj else []
+        return {"jsonrpc": "2.0", "result": {"resources": resources}, "id": req.id}
+
+    if req.method == "prompts/list":
+        if not _active_project_id:
+            return {"jsonrpc": "2.0", "result": {"prompts": []}, "id": req.id}
+        proj = store.get_project_by_id(_active_project_id)
+        if not proj:
+            return {"jsonrpc": "2.0", "result": {"prompts": []}, "id": req.id}
+        endpoints = store.get_endpoints_by_project(_active_project_id)
+        prompts = generate_prompts(endpoints, proj)
         return {
             "jsonrpc": "2.0",
             "result": {
-                "resources": [
-                    {
-                        "uri": f"spec2mcp://{_active_project_id}/{a.id}",
-                        "name": a.name,
-                        "description": f"{a.type.value}: {a.endpoint_count} endpoints",
-                        "mimeType": "application/json",
-                    }
-                    for a in artifacts
+                "prompts": [
+                    {"name": p["name"], "description": p["description"]}
+                    for p in prompts
                 ]
             },
             "id": req.id,
         }
+
+    if req.method == "prompts/get":
+        prompt_name = (req.params or {}).get("name", "")
+        if not _active_project_id:
+            return {"jsonrpc": "2.0", "error": {"code": -32603, "message": "No active project"}, "id": req.id}
+        proj = store.get_project_by_id(_active_project_id)
+        endpoints = store.get_endpoints_by_project(_active_project_id)
+        prompts = generate_prompts(endpoints, proj) if proj else []
+        matched = next((p for p in prompts if p["name"] == prompt_name), None)
+        if not matched:
+            return {"jsonrpc": "2.0", "error": {"code": -32602, "message": f"Unknown prompt: {prompt_name}"}, "id": req.id}
+        return {"jsonrpc": "2.0", "result": {"messages": [{"role": "user", "content": matched["content"]}]}, "id": req.id}
 
     if req.method == "tools/call":
         tool_name = (req.params or {}).get("name", "")
