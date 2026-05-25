@@ -1,6 +1,5 @@
-const API_BASE = window.location.origin.includes('vercel.app')
-  ? 'https://spec2mcp-demo.onrender.com/api'
-  : '/api'
+const RENDER_URL = 'https://spec2mcp-demo.onrender.com'
+const API_BASE = window.location.origin.includes('vercel.app') ? `${RENDER_URL}/api` : '/api'
 
 async function fetcher<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -15,7 +14,7 @@ async function fetcher<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export function fetchHealth() {
-  return fetcher<{ status: string; version: string }>('/health')
+  return fetch(`${RENDER_URL}/health`).then(r => r.json()) as Promise<{ status: string; version: string }>
 }
 
 export function fetchStatus() {
