@@ -1,4 +1,6 @@
-const API_BASE = '/api'
+const API_BASE = window.location.origin.includes('vercel.app')
+  ? 'https://spec2mcp-demo.onrender.com/api'
+  : '/api'
 
 async function fetcher<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
