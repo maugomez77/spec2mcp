@@ -133,11 +133,11 @@ export default function ProjectDetail() {
                       onClick={() => setExpandedTool(isExpanded ? null : t.name)}
                       className="w-full flex items-center justify-between p-3 hover:bg-slate-50 transition-colors text-left"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
                         <span className="text-sm font-mono font-medium text-slate-800 truncate">{t.name}</span>
                         {!hasParams && (
-                          <span className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-400 font-medium">no params</span>
+                          <span className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-400 font-medium whitespace-nowrap">no params</span>
                         )}
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
