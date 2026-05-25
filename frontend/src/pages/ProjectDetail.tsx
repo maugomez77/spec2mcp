@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { fetchProjects, fetchArtifacts, fetchEndpointsByProject } from '../lib/api'
+import { fetchProjects, fetchArtifacts, fetchEndpointsByProject, fetchArtifact } from '../lib/api'
 import {
   ArrowLeft,
   Globe,
@@ -11,6 +11,8 @@ import {
   ChevronDown,
   ChevronRight,
   ExternalLink,
+  X,
+  Eye,
 } from 'lucide-react'
 
 export default function ProjectDetail() {
@@ -20,6 +22,8 @@ export default function ProjectDetail() {
   const [tools, setTools] = useState<any[]>([])
   const [copied, setCopied] = useState(false)
   const [expandedTool, setExpandedTool] = useState<string | null>(null)
+  const [viewedArtifact, setViewedArtifact] = useState<any>(null)
+  const [artifactContent, setArtifactContent] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -34,6 +38,16 @@ export default function ProjectDetail() {
     }, null, 2))
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const viewArtifact = async (artifact: any) => {
+    setViewedArtifact(artifact)
+    try {
+      const full = await fetchArtifact(artifact.id)
+      setArtifactContent(full.raw_content || '')
+    } catch {
+      setArtifactContent('Could not load artifact content.')
+    }
   }
 
   if (!project) return (
@@ -97,16 +111,21 @@ export default function ProjectDetail() {
             ) : (
               <div className="space-y-2.5">
                 {artifacts.map(a => (
-                  <div key={a.id} className="flex items-center justify-between p-3 rounded-lg bg-white border border-slate-100">
+                  <button
+                    key={a.id}
+                    onClick={() => viewArtifact(a)}
+                    className="w-full text-left flex items-center justify-between p-3 rounded-lg bg-white border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all group/artifact"
+                  >
                     <div className="flex items-center gap-3">
                       <span className={`w-2 h-2 rounded-full ${a.status === 'ready' ? 'bg-emerald-500' : a.status === 'error' ? 'bg-red-500' : 'bg-amber-400'}`} />
-                      <span className="text-sm font-medium text-slate-700">{a.name}</span>
+                      <span className="text-sm font-medium text-slate-700 group-hover/artifact:text-indigo-700 transition-colors">{a.name}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs bg-slate-100 px-2.5 py-1 rounded-md text-slate-500 font-medium">{a.type}</span>
+                      <span className="text-xs bg-slate-100 px-2.5 py-1 rounded-md text-slate-500 font-medium group-hover/artifact:bg-indigo-100 group-hover/artifact:text-indigo-600 transition-colors">{a.type}</span>
                       <span className="text-xs text-slate-400">{a.endpoint_count} endpoints</span>
+                      <Eye size={14} className="text-slate-300 group-hover/artifact:text-indigo-400 transition-colors" />
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -213,6 +232,44 @@ export default function ProjectDetail() {
 }`}
         </pre>
       </div>
+
+      {viewedArtifact && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => { setViewedArtifact(null); setArtifactContent(null) }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 rounded-lg bg-indigo-100">
+                  <FileCode2 size={18} className="text-indigo-600" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-slate-800 truncate">{viewedArtifact.name}</h3>
+                  <p className="text-xs text-slate-400">{viewedArtifact.type} · {viewedArtifact.endpoint_count} endpoints</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setViewedArtifact(null); setArtifactContent(null) }}
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-6">
+              {artifactContent === null ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="animate-pulse flex flex-col items-center gap-4">
+                    <div className="w-8 h-8 rounded-full bg-slate-200" />
+                    <p className="text-sm text-slate-400">Loading content...</p>
+                  </div>
+                </div>
+              ) : (
+                <pre className="text-xs leading-relaxed font-mono text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-xl p-5 border border-slate-100 max-h-[60vh] overflow-auto">
+                  {artifactContent}
+                </pre>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -37,6 +37,10 @@ export function fetchArtifacts(projectId?: string) {
   return fetcher<Array<{ id: string; name: string; type: string; status: string; endpoint_count: number; project_id: string }>>(`/artifacts${params}`)
 }
 
+export function fetchArtifact(artifactId: string) {
+  return fetcher<{ id: string; name: string; type: string; status: string; endpoint_count: number; project_id: string; raw_content: string | null }>(`/artifacts/${artifactId}`)
+}
+
 export function fetchEndpointsByProject(projectId: string) {
   return fetcher<Array<{ name: string; description: string; input_schema: any; endpoint: any }>>(`/endpoints/by-project/${projectId}`)
 }
